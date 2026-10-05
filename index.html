@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Педагогическая дуэль</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="noise"></div>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span><span>ИНТЕРАКТИВНОЕ ШОУ</span></div>
+    <div class="progress" id="progress">1 / 27</div>
+    <button class="menu" id="menuBtn">МЕНЮ</button>
+  </header>
+
+  <main id="screen" class="screen"></main>
+
+  <footer class="controls">
+    <div>ПРОБЕЛ / → — ДАЛЕЕ</div>
+    <button class="orb" id="startBtn" aria-label="Старт"><span>✦</span></button>
+    <div>← — НАЗАД</div>
+  </footer>
+</div>
+
+<div class="panel hidden" id="panel">
+  <div class="panel-card">
+    <button class="close" id="closePanel">×</button>
+    <h2>Управление</h2>
+    <div class="keys"><b>ПРОБЕЛ</b><span>старт / следующий экран</span>
+    <b>← →</b><span>назад / далее</span>
+    <b>R</b><span>сбросить текущий раунд</span>
+    <b>F</b><span>полный экран</span>
+    <b>M</b><span>звук</span></div>
+    <p>Для телевизора лучше открыть сайт в полноэкранном режиме.</p>
+  </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
