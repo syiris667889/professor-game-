@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Педагогическая дуэль</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #09090b;
+            color: #f4f4f5;
+        }
+        ::selection {
+            background: #ffffff;
+            color: #000000;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-8 md:p-16 select-none overflow-hidden">
+
+    <!-- Верхняя компактная панель состояния -->
+    <header class="flex justify-between items-center text-xs tracking-widest uppercase text-zinc-500 font-medium">
+        <div id="round-indicator" class="flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>Главный экран</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span id="progress-indicator">1 / 23</span>
+            <button onclick="toggleMenu()" class="hover:text-zinc-300 transition cursor-pointer">Меню</button>
+        </div>
+    </header>
+
+    <!-- Скрытое выпадающее меню выбора слайда -->
+    <div id="menu-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-6">
+        <div class="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-sm font-semibold tracking-wider text-zinc-400 uppercase">Навигация по слайдам</h3>
+                <button onclick="toggleMenu()" class="text-zinc-400 hover:text-white">✕</button>
+            </div>
+            <div id="slides-list" class="space-y-2 max-h-96 overflow-y-auto pr-2 text-sm">
+                <!-- Заполняется динамически -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Основной чистый контент (по центру экрана) -->
+    <main class="flex-1 flex flex-col items-center justify-center text-center max-w-5xl mx-auto w-full my-auto px-4">
+        <div id="content-container" class="transition-all duration-300 w-full">
+            <!-- Динамический контент -->
+        </div>
+    </main>
+
+    <!-- Нижняя подсказка управления -->
+    <footer class="flex justify-between items-center text-xs tracking-wider text-zinc-600 uppercase font-medium">
+        <div>Пробел / → — далее • Старт таймера</div>
+        <div>← — назад</div>
+    </footer>
+
+    <script>
+        const slides = [
+            // 0
+            { type: 'title', round: 'Интерактивное шоу', title: 'Педагогическая дуэль', subtitle: 'Ко Дню учителя' },
+
+            // Раунд 1
+            { type: 'round', round: 'Раунд 1', title: 'Ответ за 5 секунд' },
+            { type: 'task', round: 'Раунд 1 • 1/5', text: 'Назовите три причины любить пятницу.', timer: 5 },
+            { type: 'task', round: 'Раунд 1 • 2/5', text: 'Назовите три фразы учителя перед контрольной.', timer: 5 },
+            { type: 'task', round: 'Раунд 1 • 3/5', text: 'Назовите три приятных занятия после уроков.', timer: 5 },
+            { type: 'task', round: 'Раунд 1 • 4/5', text: 'Покажите жестами: до звонка осталось одна минута', timer: 5 },
+            { type: 'task', round: 'Раунд 1 • 5/5', text: 'Покажите жестами, кто хочет на доске.', timer: 5 },
+
+            // Раунд 2
+            { type: 'round', round: 'Раунд 2', title: 'Реклама за 5 сек' },
+            { type: 'task', round: 'Раунд 2 • 1/5', text: '«Сегодня домашнего задания не будет!» — как на Евровидении.', timer: 5 },
+            { type: 'task', round: 'Раунд 2 • 2/5', text: 'Реклама красной ручки.', timer: 5 },
+            { type: 'task', round: 'Раунд 2 • 3/5', text: '«Завтра контрольная!» — как прекрасная новость.', timer: 5 },
+            { type: 'task', round: 'Раунд 2 • 4/5', text: 'Ученик не выучил урок.', timer: 5 },
+            { type: 'task', round: 'Раунд 2 • 5/5', text: '«Открываем дневники!» — церемония награждения.', timer: 5 },
+
+            // Раунд 3
+            { type: 'round', round: 'Раунд 3', title: 'Запрещённое слово', note: 'Нельзя говорить «да» и «нет»' },
+            { type: 'question', round: 'Раунд 3 • 1/5', text: 'Вы любите свою работу?', warning: 'Запрещено: «да», «нет»' },
+            { type: 'question', round: 'Раунд 3 • 2/5', text: 'Вы когда-нибудь ставили двойку?', warning: 'Запрещено: «да», «нет»' },
+            { type: 'question', round: 'Раунд 3 • 3/5', text: 'Хотели отменить урок?', warning: 'Запрещено: «да», «нет»' },
+            { type: 'question', round: 'Раунд 3 • 4/5', text: 'Проверяете тетради вечером?', warning: 'Запрещено: «да», «нет»' },
+            { type: 'question', round: 'Раунд 3 • 5/5', text: 'Радуетесь каникулам больше учеников?', warning: 'Запрещено: «да», «нет»' },
+
+            // Раунд 4
+            { type: 'round', round: 'Раунд 4', title: 'Педагогический мозговой штурм' },
+            { type: 'question', round: 'Раунд 4 • 1/6', text: 'Если бы у учителя была волшебная кнопка, что бы она делала?' },
+            { type: 'question', round: 'Раунд 4 • 2/6', text: 'Вы открываете кафе только для учителей. Как оно называется и какое у него фирменное блюдо?' },
+            { type: 'question', round: 'Раунд 4 • 3/6', text: 'Что означает фраза ученика: «Я учил, но забыл»?' },
+            { type: 'question', round: 'Раунд 4 • 4/6', text: 'Если бы школьный журнал умел говорить, что бы он сказал учителям в конце четверти?' },
+            { type: 'question', round: 'Раунд 4 • 5/6', text: 'Вам подарили робота-помощника. Какие три школьных дела вы ему поручите?' },
+            { type: 'question', round: 'Раунд 4 • 6/6', text: 'Если бы о вашей школе снимали комедию, как бы она называлась?' },
+
+            // Финал
+            { type: 'final', round: 'Финал', title: 'Школьный указ ко Дню учителя', text: '«С сегодняшнего дня всем учителям разрешается…»' }
+        ];
+
+        let currentIndex = 0;
+        let timerInterval = null;
+        let timerState = 'idle'; // idle, running, finished
+        let timeLeft = 5;
+
+        function render() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerState = 'idle';
+            timeLeft = 5;
+
+            const slide = slides[currentIndex];
+            const container = document.getElementById('content-container');
+            
+            document.getElementById('round-indicator').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>${slide.round}</span>`;
+            document.getElementById('progress-indicator').innerText = `${currentIndex + 1} / ${slides.length}`;
+
+            let html = '';
+
+            if (slide.type === 'title') {
+                html = `
+                    <div class="space-y-6">
+                        <p class="text-zinc-500 text-sm tracking-widest uppercase font-semibold">${slide.subtitle}</p>
+                        <h1 class="text-5xl md:text-8xl font-bold tracking-tight text-white">${slide.title}</h1>
+                        <p class="text-zinc-600 text-xs tracking-widest uppercase pt-8">Нажмите Пробел для старта</p>
+                    </div>
+                `;
+            } else if (slide.type === 'round') {
+                html = `
+                    <div class="space-y-4">
+                        <p class="text-zinc-500 text-sm tracking-widest uppercase font-semibold">${slide.round}</p>
+                        <h2 class="text-4xl md:text-7xl font-bold tracking-tight text-white">${slide.title}</h2>
+                        ${slide.note ? `<p class="text-amber-400 text-sm font-medium pt-2">⚠️️ ${slide.note}</p>` : ''}
+                    </div>
+                `;
+            } else if (slide.type === 'task') {
+                html = `
+                    <div class="space-y-10">
+                        <h2 class="text-3xl md:text-6xl font-semibold tracking-tight text-white leading-relaxed max-w-4xl mx-auto">${slide.text}</h2>
+                        <div id="timer-display" class="py-2">
+                            <span id="timer-number" class="text-7xl md:text-9xl font-bold tracking-tighter text-zinc-400 font-mono">5</span>
+                            <p id="timer-hint" class="text-xs text-zinc-600 uppercase tracking-widest mt-3">Пробел — запустить таймер</p>
+                        </div>
+                    </div>
+                `;
+            } else if (slide.type === 'question') {
+                html = `
+                    <div class="space-y-8">
+                        <h2 class="text-3xl md:text-6xl font-semibold tracking-tight text-white leading-relaxed max-w-4xl mx-auto">${slide.text}</h2>
+                        ${slide.warning ? `<p class="text-red-400 text-xs tracking-widest uppercase font-medium">⚠️ ${slide.warning}</p>` : ''}
+                    </div>
+                `;
+            } else if (slide.type === 'final') {
+                html = `
+                    <div class="space-y-6">
+                        <p class="text-zinc-500 text-sm tracking-widest uppercase font-semibold">${slide.round}</p>
+                        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-white">${slide.title}</h2>
+                        <p class="text-2xl md:text-4xl font-normal text-zinc-300 italic pt-4 max-w-3xl mx-auto">${slide.text}</p>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function triggerAction() {
+            const slide = slides[currentIndex];
+            if (slide.type === 'task') {
+                if (timerState === 'idle') {
+                    startTimer();
+                } else if (timerState === 'finished') {
+                    nextSlide();
+                }
+            } else {
+                nextSlide();
+            }
+        }
+
+        function startTimer() {
+            timerState = 'running';
+            timeLeft = 5;
+            const numEl = document.getElementById('timer-number');
+            const hintEl = document.getElementById('timer-hint');
+
+            numEl.innerText = timeLeft;
+            numEl.classList.remove('text-zinc-400');
+            numEl.classList.add('text-white', 'scale-110');
+            hintEl.innerText = 'Время идет...';
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    numEl.innerText = timeLeft;
+                } else {
+                    numEl.innerText = 'Время!';
+                    numEl.classList.remove('text-white');
+                    numEl.classList.add('text-red-500');
+                    hintEl.innerText = 'Пробел — далее';
+                    timerState = 'finished';
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+        }
+
+        function nextSlide() {
+            if (currentIndex < slides.length - 1) {
+                currentIndex++;
+                render();
+            }
+        }
+
+        function prevSlide() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                render();
+            }
+        }
+
+        function toggleMenu() {
+            const modal = document.getElementById('menu-modal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                buildMenu();
+            }
+        }
+
+        function buildMenu() {
+            const list = document.getElementById('slides-list');
+            list.innerHTML = slides.map((s, i) => `
+                <div onclick="goToSlide(${i})" class="p-2 hover:bg-zinc-800 rounded cursor-pointer flex justify-between items-center ${i === currentIndex ? 'text-white font-bold bg-zinc-800/50' : 'text-zinc-400'}">
+                    <span>${i + 1}. ${s.title || s.text || s.round}</span>
+                    <span class="text-xs text-zinc-600">${s.round}</span>
+                </div>
+            `).join('');
+        }
+
+        function goToSlide(i) {
+            currentIndex = i;
+            toggleMenu();
+            render();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                triggerAction();
+            } else if (e.code === 'ArrowRight') {
+                nextSlide();
+            } else if (e.code === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        window.onload = () => {
+            render();
+        };
+    </script>
+</body>
+</html>
